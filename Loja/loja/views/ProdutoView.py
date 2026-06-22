@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from loja.models import Produto
+from loja.models import Produto, Fabricante, Categoria
 from datetime import timedelta, datetime
 from django.utils import timezone
 # inclua as bibliotecas FileSystemStorage
@@ -66,7 +66,10 @@ def edit_produto_view(request, id=None):
         produtos = produtos.filter(id=id)
     produto = produtos.first()
     print(produto)
-    context = { 'produto': produto }
+    #adicione a lista de fabricantes e categorias no context
+    Fabricantes = Fabricante.objects.all()
+    Categorias = Categoria.objects.all()
+    context = { 'produto': produto, 'fabricantes' : Fabricantes, 'categorias' : Categorias }
     return render(request, template_name='produto/produto-edit.html', context=context, status=200)
 
 def edit_produto_postback(request, id=None):
@@ -78,6 +81,9 @@ def edit_produto_postback(request, id=None):
         destaque = request.POST.get("destaque")
         promocao = request.POST.get("promocao")
         msgPromocao = request.POST.get("msgPromocao")
+        #adicione a requisição do valor do campo post
+        categoria = request.POST.get("CategoriaFk")
+        fabricante = request.POST.get("FabricanteFk")
         print("postback")
         print(id)
         print(produto)
@@ -91,6 +97,8 @@ def edit_produto_postback(request, id=None):
             obj_produto.promocao = (promocao is not None)
             if msgPromocao is not None:
                 obj_produto.msgPromocao = msgPromocao
+            obj_produto.fabricante = Fabricante.objects.filter(id=fabricante).first()
+            obj_produto.categoria = Categoria.objects.filter(id=categoria).first()
             obj_produto.save()
             print("Produto %s salvo com sucesso" % produto)
         except Exception as e:
